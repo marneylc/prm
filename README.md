@@ -22,7 +22,7 @@ The code is run twice:
 1. Clone this repository to your local machine.
 2. Navigate to the cloned repository directory.
 3. Build the Docker image:  ```docker build -t prm . ```
-4. Run the tool inside a Docker container: ```docker run --rm prm```
+4. Run the tool inside a Docker container: ```docker run -it -v ${PWD}:/code prm /usr/bin/R```
 
 ### Without Docker
 - If you prefer not to use Docker, dont!
