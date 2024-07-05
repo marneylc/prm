@@ -38,8 +38,11 @@ We welcome contributions to enhance the functionality and efficiency of this too
 
 Please ensure that your code follows our coding standards and includes appropriate tests. We appreciate your contributions!
 
+## Please cite the original paper if used in your work:
+Marney, L., Choi, J., Magana, A. A., Yang, L., Techen, N., Alam, N. M., Brandes, M., Soumyanath, A., Stevens, F., & Maier, C. (2024). Liquid Chromatography-Mass Spectrometry Quantification of Phytochemicals in Withania somnifera Using Data-Dependent Acquisition, Multiple-Reaction-Monitoring, and Parallel-Reaction-Monitoring with an Inclusion List. *Front. Chem., Sec. Analytical Chemistry*, 12, 1003. doi: 10.3389/fchem.2024.1373535
+
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for more details.
 
 ## Contact
-For support or to report issues, please file an issue on the GitHub repository.
+For support or to report issues, please file an issue on the GitHub repository or email Luke Marney.
