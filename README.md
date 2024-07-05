@@ -1,6 +1,6 @@
-# PRM with an inclusion list in R
+# PRM with an inclusion list
 ## Overview
-This R-based tool helps analyzing prm data when collected with an inclusion list. It solves the central problem that DDA-based acquisition using an inclusion list does not "order" the prm MS2 acquisitions in neat transitions like MRM and simply requires selecting MS2 scans of the inclusion list precursor ions from the raw data. The code operates in two phases:
+This small R script helps analyzing prm data when collected with an inclusion list. It solves the central problem that DDA-based acquisition using an inclusion list does not "order" the prm MS2 acquisitions in neat transitions like MRM and simply requires selecting MS2 scans of the inclusion list precursor ions from the raw data. The code operates in two phases:
 1. **Definition and Selection Phase:** Initially, the tool defines spectra for each target and selects the top 10 precursor ion monitoring (PRM) MS2s based on specific criteria.
 2. **Application Phase:** In the subsequent run, it applies these selected PRMs to every analyte and integrates them for comprehensive analysis.
 
