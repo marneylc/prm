@@ -25,7 +25,7 @@ The code is run twice:
 4. Run the tool inside a Docker container: ```docker run --rm prm```
 
 ### Without Docker
-- If you prefer not to use Docker, follow the R-specific instructions provided in the previous version of this README.
+- If you prefer not to use Docker, dont!
 
 ## Contributing
 We welcome contributions to enhance the functionality and efficiency of this tool. If you would like to contribute, please follow these steps:
