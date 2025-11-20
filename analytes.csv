@@ -1,9 +1,40 @@
 analyte,targetRT,rtwin,targetMZ,mzwin
-wIV,132,30,800.443,0.02
-wV,256.2,30,784.448,0.02
-withaferinA,270,15,471.275,0.02
-deoxy12,294,15,471.275,0.02
-withanolideA,320,15,471.275,0.02
-withanone,340,15,488.301,0.02
-withanolideB,470,30,472.306,0.02
-digoxind3,204.6,30,801.4828,0.02
+Withanoside VI,2.34,30,800.4427,0.02
+Withanoside IV,2.98,30,800.4427,0.02
+Withanoside VII,3.24,30,800.4427,0.02
+Withanoside V,5.16,30,784.4478,0.02
+Viscolactone B isomer 1,1.26,35,489.285,0.02
+Viscolactone B isomer 2,5.35,35,489.285,0.02
+Viscolactone B isomer 3,5.99,30,489.285,0.02
+Viscolactone B isomer 4,2.43,30,489.285,0.02
+Dihydrowithaferin A isomer 1,2.67,35,473.2898,0.02
+Dihydrowithaferin A isomer 2,3.51,35,473.2898,0.02
+Dihydrowithaferin A isomer 3,5.4,35,473.2898,0.02
+sominone,5.4,35,459.311,0.02
+possible sominone glycone (in source fragment) 1 ,1.2,35,459.311,0.02
+possible sominone glycone (in source fragment) 2,1.96,35,459.311,0.02
+possible sominone glycone (in source fragment) 3,2.34,35,459.311,0.02
+possible sominone glycone (in source fragment) 4,2.99,35,459.311,0.02
+possible sominone glycone (in source fragment) 5,3.63,35,459.311,0.02
+possible sominone glycone (in source fragment) 6,4.24,35,459.311,0.02
+"3beta-Methoxy-2,3-dihydrowithaferin A",5,35,503.3009,0.02
+27-Hydroxywithanone,5,35,504.295,0.02
+Withaferin A,4.7,35,471.2746,0.02
+12-Deoxywithastramonolide,5.1,35,471.2746,0.02
+Withanolide B isomer 1,6.1,35,455.2792,0.02
+Withanolide A,5.4,35,488.3006,0.02
+Dihydrowithaferin A isomer 4,5.67,35,473.2898,0.02
+Withanone,5.8,35,459.311,0.02
+4-oxo-withaferin A,7.2,35,469.259,0.02
+Withanolide B isomer 2,6.54,35,455.2792,0.02
+Withanolide B isomer 3,7.08,35,455.2792,0.02
+Withanolide B isomer 4,7.7,35,455.2792,0.02
+Withanolide B,8.7,35,455.2792,0.02
+Withasomniferolide-like 1,2.7,35,437.2686,0.02
+Withasomniferolide-like 2,3.6,35,437.2686,0.02
+Withasomniferolide-like 3,4.8,35,437.2686,0.02
+Withasomniferolide-like 4,6.78,35,437.2686,0.02
+Withasomniferolide-like 5,7.1,35,437.2686,0.02
+Withasomniferolide-like 6,7.6,35,437.2686,0.02
+Withasomniferolide-like 7,8.1,35,437.2686,0.02
+digoxin-d3,4.1,35,801.4828,0.02

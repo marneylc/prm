@@ -14,51 +14,188 @@ require(data.table)
 # mzwin: m/z window to search for the target compound
 # analytes <- read.csv("analytes.csv", header = TRUE, sep = ",", row.names = 1)
 main <- function() {
+  # Parse simple CLI args for mode selection and input path
+  args <- commandArgs(trailingOnly = TRUE)
+  use_defined_mzs <- TRUE  # default: use defined m/z values (current behavior)
+  ms1_mode <- FALSE        # default: do not use MS1 sum mode
+  input_path <- NULL
+
+  # Supported flags:
+  #   --mode=defined | --defined | -m defined
+  #   --mode=discover | --discover | -m discover
+  #   --ms1 | -M (sum MS1 in RT/mz window for each analyte)
+  #   --input=/path/to/dir_or_file.mzML | -i /path/to/dir_or_file.mzML
+  if (any(args == "--ms1") || any(args == "-M")) {
+    ms1_mode <- TRUE
+  }
+  if (any(grepl("^--mode=discover$", args)) || any(args == "--discover")) {
+    use_defined_mzs <- FALSE
+  }
+  if (any(grepl("^--mode=defined$", args)) || any(args == "--defined")) {
+    use_defined_mzs <- TRUE
+  }
+  if (any(args == "-m")) {
+    idx <- which(args == "-m")
+    if (length(idx) > 0) {
+      for (j in idx) {
+        if (j < length(args)) {
+          v <- tolower(args[j + 1])
+          if (v == "discover") use_defined_mzs <- FALSE
+          if (v == "defined") use_defined_mzs <- TRUE
+        }
+      }
+    }
+  }
+
+  # Parse input path
+  if (any(grepl("^--input=", args))) {
+    input_idx <- grep("^--input=", args)
+    input_path <- sub("^--input=", "", args[input_idx[1]])
+  }
+  if (any(args == "--input") || any(args == "-i")) {
+    idx <- which(args == "--input" | args == "-i")
+    if (length(idx) > 0 && idx[1] < length(args)) {
+      input_path <- args[idx[1] + 1]
+    }
+  }
+  # Also support positional argument (first non-flag argument)
+  if (is.null(input_path)) {
+    non_flags <- args[!grepl("^--", args) & !grepl("^-[mi]$", args)]
+    # Remove values that follow -m or -i
+    if (any(args == "-m")) {
+      m_idx <- which(args == "-m")
+      for (j in m_idx) {
+        if (j < length(args)) {
+          non_flags <- non_flags[non_flags != args[j + 1]]
+        }
+      }
+    }
+    if (any(args == "-i") || any(args == "--input")) {
+      i_idx <- which(args == "-i" | args == "--input")
+      for (j in i_idx) {
+        if (j < length(args)) {
+          non_flags <- non_flags[non_flags != args[j + 1]]
+        }
+      }
+    }
+    if (length(non_flags) > 0) {
+      input_path <- non_flags[1]
+    }
+  }
+
+  # Determine file list
+  if (!is.null(input_path)) {
+    if (dir.exists(input_path)) {
+      # Input is a directory
+      files <- list.files(input_path, full.names = TRUE, pattern = '\\.mzML$', recursive = FALSE)
+      if (length(files) == 0) {
+        stop(sprintf("No .mzML files found in directory: %s", input_path))
+      }
+      message(sprintf("Found %d .mzML file(s) in directory: %s", length(files), input_path))
+    } else if (file.exists(input_path)) {
+      # Input is a single file
+      if (!grepl("\\.mzML$", input_path, ignore.case = TRUE)) {
+        stop(sprintf("Input file must be .mzML format: %s", input_path))
+      }
+      files <- input_path
+      message(sprintf("Processing single file: %s", input_path))
+    } else {
+      stop(sprintf("Input path does not exist: %s", input_path))
+    }
+  } else {
+    # Default: search current directory
+    files <- list.files('.', full.names = TRUE, pattern = '\\.mzML$', recursive = FALSE)
+    if (length(files) == 0) {
+      stop("No .mzML files found in current directory. Use --input to specify a directory or file.")
+    }
+    message(sprintf("No input specified. Found %d .mzML file(s) in current directory.", length(files)))
+  }
+
+  message(sprintf("PRM mode: %s", ifelse(use_defined_mzs, "defined m/z", "discover (no predefined m/z)")))
+
   analytes <- read.csv("analytes.csv", header = TRUE, sep = ",", row.names = 1)
-  files <- list.files('.', full.names = TRUE, pattern = '.mzML', recursive = FALSE)
+  # Convert targetRT from minutes to seconds (CSV provided in minutes)
+  if (!is.null(analytes$targetRT)) {
+    suppressWarnings({
+      analytes$targetRT <- as.numeric(analytes$targetRT) * 60
+    })
+    message("Converted analytes$targetRT from minutes to seconds (x60)")
+  }
   source("hrms.R")
-  peakareas <- PRM(files, analytes)
+  if (ms1_mode) {
+    message("Running in MS1 sum mode (--ms1): summing MS1 intensities in RT/mz window for each analyte.")
+    peakareas <- PRM(files, analytes, use_defined_mzs = use_defined_mzs, ms1_mode = TRUE)
+  } else {
+    peakareas <- PRM(files, analytes, use_defined_mzs = use_defined_mzs, ms1_mode = FALSE)
+  }
   write.csv(peakareas, file = "peakareas.csv")
 }
 
 # Get the peak areas for all compounds in all files
-PRM <- function(files,analytes) {
+PRM <- function(files, analytes, use_defined_mzs = TRUE, ms1_mode = FALSE) {
   for (f in 1:length(files)) {
     print(files[f])
-    raw_data <- readMSData(files[f], msLevel = 2, mode = "onDisk") # load data file
+    raw_data <- readMSData(files[f], mode = "onDisk") # load data file (all MS levels)
     analytes[,files[f]] <- NA
-    
-    ##############################################################################
-    ## running prm without defined mzs
-    # in order to determine the prms to use for each compound
-    # uses get_spec function and saves the prm_traces table, figures, and spectra
-    # usually only needed to run on one file
-    ##############################################################################
-    # for (i in 1:dim(analytes)[1]) {
-    #   sumspec <- get_spec(raw_data,
-    #     analyte = rownames(analytes)[i],
-    #     target_rt = as.numeric(analytes$targetRT[i]),
-    #     rt_win = as.numeric(analytes$rtwin[i]), 
-    #     target_mz = as.numeric(analytes$targetMZ[i]), 
-    #     mz_win = as.numeric(analytes$mzwin[i]))
-    #   peakarea <- sum(sumspec$intensity)
-    #   analytes[i,files[f]] <- peakarea
-    # }
-    # 
-    ##############################################################################
-    ## running prm with defined mzs
-    for (i in 1:dim(analytes)[1]) {
-      sumspec <- get_spec_definedmzs(raw_data,
-        analyte = rownames(analytes)[i],
-        target_rt = as.numeric(analytes$targetRT[i]),
-        rt_win = as.numeric(analytes$rtwin[i]), 
-        target_mz = as.numeric(analytes$targetMZ[i]), 
-        mz_win = as.numeric(analytes$mzwin[i]))
-      peakarea <- sum(sumspec$intensity)
-      analytes[i,files[f]] <- peakarea
+    if (ms1_mode) {
+      for (i in 1:dim(analytes)[1]) {
+        ms1sum <- get_ms1(raw_data,
+          analyte = rownames(analytes)[i],
+          target_rt = as.numeric(analytes$targetRT[i]),
+          rt_win = as.numeric(analytes$rtwin[i]),
+          target_mz = as.numeric(analytes$targetMZ[i]),
+          mz_win = as.numeric(analytes$mzwin[i]))
+        analytes[i,files[f]] <- ms1sum
+      }
+    } else if (!use_defined_mzs) {
+      for (i in 1:dim(analytes)[1]) {
+        sumspec <- get_spec(raw_data,
+          analyte = rownames(analytes)[i],
+          target_rt = as.numeric(analytes$targetRT[i]),
+          rt_win = as.numeric(analytes$rtwin[i]), 
+          target_mz = as.numeric(analytes$targetMZ[i]), 
+          mz_win = as.numeric(analytes$mzwin[i]))
+        peakarea <- sum(sumspec$intensity)
+        analytes[i,files[f]] <- peakarea
+      }
+    } else {
+      for (i in 1:dim(analytes)[1]) {
+        sumspec <- get_spec_definedmzs(raw_data,
+          analyte = rownames(analytes)[i],
+          target_rt = as.numeric(analytes$targetRT[i]),
+          rt_win = as.numeric(analytes$rtwin[i]), 
+          target_mz = as.numeric(analytes$targetMZ[i]), 
+          mz_win = as.numeric(analytes$mzwin[i]))
+        peakarea <- sum(sumspec$intensity)
+        analytes[i,files[f]] <- peakarea
+      }
     }
   }
   return(analytes)
+}
+
+# New: sum MS1 intensities in RT/mz window for each analyte
+get_ms1 <- function(raw_data, analyte, target_rt, rt_win, target_mz, mz_win) {
+  # Find MS1 scans in RT window
+  rts <- rtime(raw_data)
+  ms_levels <- msLevel(raw_data)
+  ms1_idx <- which(ms_levels == 1 & rts > (target_rt - rt_win) & rts < (target_rt + rt_win))
+  if (length(ms1_idx) == 0) {
+    message(sprintf("No MS1 scans found for %s in RT window.", analyte))
+    return(0)
+  }
+  mz_range <- c(target_mz - mz_win, target_mz + mz_win)
+  total_intensity <- 0
+  for (idx in ms1_idx) {
+    sp <- raw_data[[idx]]
+    mzs <- sp@mz
+    ints <- sp@intensity
+    in_range <- which(mzs > mz_range[1] & mzs < mz_range[2])
+    if (length(in_range) > 0) {
+      total_intensity <- total_intensity + sum(ints[in_range])
+    }
+  }
+  return(total_intensity)
 }
 
 ## For get_spec testing
